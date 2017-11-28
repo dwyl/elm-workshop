@@ -5,6 +5,20 @@ import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
 
 
+type alias SearchResult =
+    { id : Int
+    , name : String
+    , stars : Int
+    }
+
+
+type alias Model =
+    { query : String
+    , results : List SearchResult
+    }
+
+
+initialModel : Model
 initialModel =
     { query = "tutorial"
     , results =
@@ -32,14 +46,15 @@ initialModel =
     }
 
 
+elmHubHeader =
+    header []
+        [ h1 [] [ text "ElmHub" ]
+        , span [ class "tagline" ] [ text "Like GitHub, but for Elm things." ]
+        ]
+
+
+view : Model -> Html Msg
 view model =
-    let
-        elmHubHeader =
-            header []
-                [ h1 [] [ text "ElmHub" ]
-                , span [ class "tagline" ] [ text "Like GitHub, but for Elm things." ]
-                ]
-    in
     div [ class "content" ]
         [ elmHubHeader
         , ul [ class "results" ] (List.map viewSearchResult model.results)
@@ -53,15 +68,23 @@ viewSearchResult result =
             [ text result.name ]
         , button
             -- TODO add an onClick handler that sends a DELETE_BY_ID msg
-            [ class "hide-result" ]
+            [ class "hide-result", onClick { operation = "DELETE_BY_ID", data = result.id } ]
             [ text "X" ]
         ]
 
 
+type alias Msg =
+    { operation : String
+    , data : Int
+    }
+
+
 update msg model =
-    -- TODO if msg.operation == "DELETE_BY_ID",
-    -- then return a new model without the given ID present anymore.
-    model
+    if msg.operation == "DELETE_BY_ID" then
+        { model | results = List.filter (\result -> result.id /= msg.data) model.results }
+    else
+        -- then return a new model without the given ID present anymore.
+        model
 
 
 main =
