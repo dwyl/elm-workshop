@@ -5,6 +5,7 @@ import Html exposing (..)
 import Html.Attributes exposing (class, target, href, property, defaultValue)
 import Html.Events exposing (..)
 import Http
+import Task
 import Json.Decode exposing (Decoder)
 import Json.Decode.Pipeline exposing (..)
 
@@ -29,15 +30,16 @@ searchFeed query =
                 ++ query
                 ++ "+language:elm&sort=stars&order=desc"
 
-        -- HINT: responseDecoder may be useful here.
         request =
-            "TODO replace this String with a Request built using http://package.elm-lang.org/packages/elm-lang/http/latest/Http#get"
+            Http.get url responseDecoder
     in
-        -- TODO replace this Cmd.none with a call to Http.send
-        -- http://package.elm-lang.org/packages/elm-lang/http/latest/Http#send
-        --
-        -- HINT: request and HandleSearchResponse may be useful here.
-        Cmd.none
+        -- see: https://github.com/rtfeldman/elm-workshop/issues/16
+        Http.send HandleSearchResponse request
+
+
+
+-- useful: http://package.elm-lang.org/packages/elm-lang/http/latest/Http#send
+-- example: https://youtu.be/EDp6UmaA9CM?t=8m56s
 
 
 responseDecoder : Decoder (List SearchResult)
@@ -49,7 +51,7 @@ searchResultDecoder : Decoder SearchResult
 searchResultDecoder =
     decode SearchResult
         |> required "id" Json.Decode.int
-        |> required "full_name" Json.Decode.string
+        |> required "full_nam" Json.Decode.string
         |> required "stargazers_count" Json.Decode.int
 
 
@@ -129,17 +131,11 @@ update msg model =
                     ( { model | results = results }, Cmd.none )
 
                 Err error ->
-                    -- TODO if decoding failed, store the message in model.errorMessage
-                    --
-                    -- HINT 1: Remember, model.errorMessage is a Maybe String - so it
-                    -- can only be set to either Nothing or (Just "some string here")
-                    --
-                    -- Hint 2: look for "decode" in the documentation for this union type:
-                    -- http://package.elm-lang.org/packages/elm-lang/http/latest/Http#Error
-                    --
-                    -- Hint 3: to check if this is working, break responseDecoder
-                    -- by changing "stargazers_count" to "description"
-                    ( model, Cmd.none )
+                    let
+                        errorMessage =
+                            "Something when wrong fetching data from GitHub."
+                    in
+                        ( { model | errorMessage = Just errorMessage }, Cmd.none )
 
         SetQuery query ->
             ( { model | query = query }, Cmd.none )
